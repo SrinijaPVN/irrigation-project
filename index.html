@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ThingSpeak Data Display</title>
+  <style>
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    th:first-child, td:first-child {
+      width: 200px; /* Adjust the width as needed */
+    }
+  </style>
+</head>
+<body>
+  <h1>ThingSpeak Data Display</h1>
+  
+  <h2>Charts</h2>
+  <div>
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/2234378/charts/1?bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=60&type=line&update=15"></iframe>
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/2234378/charts/2?bgcolor=%23ffffff&color=%2320d620&dynamic=true&results=60&type=line&update=15"></iframe>
+    <iframe width="450" height="260" style="border: 1px solid #cccccc;" src="https://thingspeak.com/channels/2234378/charts/3?bgcolor=%23ffffff&color=%232066d6&dynamic=true&results=60&type=line&update=15"></iframe>
+  </div>
+  
+  <h2>Data Table</h2>
+  <table border="1">
+    <tr>
+      <th>Timestamp</th>
+      <th>Moisture Level</th>
+      <th>Water Level</th>
+      <th>Motor Status</th>
+    </tr>
+    <tbody id="tableBody">
+      <!-- Data will be populated here -->
+    </tbody>
+  </table>
+  
+  <script>
+    function convertUTCToIST(utcTimestamp) {
+      const options = { timeZone: 'Asia/Kolkata', hour12: false };
+      return new Date(utcTimestamp).toLocaleString('en-US', options);
+    }
+
+    function populateTable(data) {
+      var tableBody = document.getElementById('tableBody');
+      tableBody.innerHTML = ''; // Clear previous data
+      
+      data.feeds.forEach(function(feed) {
+        var row = document.createElement('tr');
+        
+        var timestampCell = document.createElement('td');
+        timestampCell.textContent = convertUTCToIST(feed.created_at);
+        row.appendChild(timestampCell);
+        
+        var moistureCell = document.createElement('td');
+        moistureCell.textContent = feed.field1;
+        row.appendChild(moistureCell);
+        
+        var waterLevelCell = document.createElement('td');
+        waterLevelCell.textContent = feed.field2;
+        row.appendChild(waterLevelCell);
+        
+        var motorStatusCell = document.createElement('td');
+        motorStatusCell.textContent = feed.field3 === '1' ? 'On' : 'Off';
+        row.appendChild(motorStatusCell);
+        
+        tableBody.appendChild(row);
+      });
+    }
+    
+    function fetchData() {
+      fetch('https://api.thingspeak.com/channels/2234378/feeds.json?results=10')
+        .then(response => response.json())
+        .then(data => populateTable(data));
+    }
+    
+    fetchData(); // Initial data fetch
+    setInterval(fetchData, 10000); // Update table every 10 seconds
+  </script>
+</body>
+</html>
